@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
+from django.contrib import messages
+from django import forms
 from django.views.generic import TemplateView
 from django.views import View
 from django.http import HttpResponseRedirect
@@ -66,4 +68,29 @@ class ProductShowView(View):
         viewData["title"] = product["name"] + " - Online Store"
         viewData["subtitle"] = product["name"] + " - Product information"
         viewData["product"] = product
+
         return render(request, self.template_name, viewData)
+
+class ProductForm(forms.Form):
+    name = forms.CharField(required=True)
+    price = forms.FloatField(required=True)
+    
+class ProductCreateView(View):
+    template_name = 'create.html'
+    def get(self, request):
+        form = ProductForm()
+        viewData = {}
+        viewData["title"] = "Create product"
+        viewData["form"] = form
+        return render(request, self.template_name, viewData)
+    def post(self, request):
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data["price"] >= 0:
+                messages.success(request, "Product created")
+                return redirect("form")
+        else:
+            viewData = {}
+            viewData["title"] = "Create product"
+            viewData["form"] = form
+            return render(request, self.template_name, viewData)
